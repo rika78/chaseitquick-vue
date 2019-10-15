@@ -1,5 +1,11 @@
 # chaseitquick-vue
 
+Nächste Woche (22.10):
+- Vuetify App mit Login (Username + Password)
+- Axios Call (POST) zu Server -> wenn OK dann Dummy Screen mit "Hier wird gescannt" 
+Sonst Fehlermeldung und bei Login bleiben.
+
+
 ## Project setup
 ```
 yarn install
