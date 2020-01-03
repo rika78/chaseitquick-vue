@@ -9,7 +9,7 @@
       <v-col cols="12" sm="12">
         <div class="text-center">
           <div class="my-2">
-            <!-- FIX ME: Change Dark - primary Color -->
+            <!-- FIX ME: Change Dark - primary Color, secondary etc. src/plugins/vuetify -->
             <v-btn rounded color="primary" dark to="anmelden">Anmelden</v-btn>
           </div>
           <div class="my-2">

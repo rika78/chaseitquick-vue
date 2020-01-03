@@ -5,6 +5,9 @@ Nächste Woche (22.10):
 - Axios Call (POST) zu Server -> wenn OK dann Dummy Screen mit "Hier wird gescannt" 
 Sonst Fehlermeldung und bei Login bleiben.
 
+## Benötigte sachen
+
+npm i axios vue-qrcode-reader 
 
 ## Project setup
 ```
