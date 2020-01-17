@@ -4,6 +4,8 @@
     <div class="mx-auto mt-12 pt-25">
       <p>{{hinweise[gefunden]}}</p>
       <p>{{gefunden}} /6</p>
+
+      
       <p>Last Result: {{result}}</p>
     </div>
 
@@ -51,7 +53,7 @@ export default {
   },
   mounted() {
     axios
-      .get("http://localhost:3000/profil", {
+      .get("http://localhost:5555/profil", {
         headers: { token: localStorage.getItem("token") }
       })
       .then(res => {
@@ -78,7 +80,7 @@ export default {
     async onDecode(result) {
       this.result = result;
 
-      let res = await axios.get("http://localhost:3000/qrcodes/alle");
+      let res = await axios.get("http://localhost:5555/qrcodes/alle");
       let qrcode = res.data; //alle qr codes
       console.log(res.data);
 
@@ -87,7 +89,7 @@ export default {
       console.log(qr[0].qid);
 
       //Get history
-      let his = await axios.post("http://localhost:3000/qrcodes/found", {
+      let his = await axios.post("http://localhost:5555/qrcodes/found", {
         username: this.username
       });
       let history = his.data;
@@ -100,14 +102,14 @@ export default {
       }
       //wenn qr code noch nicht eingescannt
       else if (history.filter(el => el.qid == qr[0].qid).length == 0) {
-        let log = await axios.post("http://localhost:3000/qrcodes/gefunden", {
+        let log = await axios.post("http://localhost:5555/qrcodes/gefunden", {
           username: this.username,
           qid: qr[0].qid
         });
         console.log(log);
         this.gefunden = log.data.length;
         if (this.gefunden == 2) {
-          // this.getTime();
+          this.getTime();
         }
         this.isShowingCamera = false;
       } else {
@@ -168,15 +170,13 @@ export default {
         }
       }
     },
-
     async getTime() {
-      let res = await axios.post("http://localhost:3000/qrcodes/found/time", {
+      console.log('hi');
+      let res = await axios.post("http://localhost:5555/qrcodes/found/time", {
         username: this.username
       });
       // res.data
       let t1t2 = res.data;
-      this.time = t1t2[0] - t1t2[1];
-      console.log(this.time);
       console.log(t1t2);
     }
   }
