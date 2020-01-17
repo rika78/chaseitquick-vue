@@ -2,7 +2,7 @@
   <v-app>
     <p class="error">{{ error }}</p>
     <div class="mx-auto mt-12 pt-25">
-      <p>Im ganzen Schulhaus sind QR-Codes verteilt. Ihr müsst nun rumgehen und sie einsammeln.</p>
+      <p>{{hinweise[gefunden]}}</p>
       <p>{{gefunden}} /6</p>
       <p>Last Result: {{result}}</p>
     </div>
@@ -35,7 +35,18 @@ export default {
       isShowingCamera: false,
       gefunden: 0,
       username: "",
-      email: ""
+      email: "",
+      hinweise: [
+        "Im ganzen Schulhaus sind QR-Codes verteilt. Ihr müsst nun rumgehen und sie einsammeln.",
+        "Der nächste QR Code ist im..",
+        "...",
+        "???",
+        "???",
+        "Zu guter Letzt",
+        "Sie haben gewonnen"
+      ],
+      punkte: 0,
+      time: ""
     };
   },
   mounted() {
@@ -85,8 +96,7 @@ export default {
       // console.log(history.filter(el => el.qid == qr[0].qid));
       // wenn alle qr codes gefunden auf andere seite
       if (this.gefunden == 6) {
-        this.gefunden = history.length;
-        this.$router.push("/Startseite");
+        this.isShowingCamera = false;
       }
       //wenn qr code noch nicht eingescannt
       else if (history.filter(el => el.qid == qr[0].qid).length == 0) {
@@ -96,9 +106,14 @@ export default {
         });
         console.log(log);
         this.gefunden = log.data.length;
+        if (this.gefunden == 2) {
+          // this.getTime();
+        }
         this.isShowingCamera = false;
       } else {
+        this.getTime();
         console.log("wurde schon eingescannt");
+
         this.isShowingCamera = false;
       }
 
@@ -152,9 +167,32 @@ export default {
           this.error = "ERROR: Stream API is not supported in this browser";
         }
       }
+    },
+
+    async getTime() {
+      let res = await axios.post("http://localhost:3000/qrcodes/found/time", {
+        username: this.username
+      });
+      // res.data
+      let t1t2 = res.data;
+      this.time = t1t2[0] - t1t2[1];
+      console.log(this.time);
+      console.log(t1t2);
     }
   }
 };
+
+/*
+In der datenbank gespeichert format:
+2020-01-17 03:02:27.726202
+
+Nehmen nur Uhr Zeit, wie?
+
+
+Uhrzeit von QrCode2 - Uhrzeit von QrCode 1 = Zeitabstand in den anderen QrCodes gescanned werden müssen
+
+
+*/
 </script>
 
 <style scoped>
@@ -163,3 +201,5 @@ export default {
   color: red;
 }
 </style>
+
+

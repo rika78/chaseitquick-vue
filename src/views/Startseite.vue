@@ -99,7 +99,7 @@ export default {
   },
   mounted() {
     axios
-      .get("http://localhost:3000/profil", {
+      .get("http://localhost:5555/profil", {
         headers: { token: localStorage.getItem("token") }
       })
       .then(res => {

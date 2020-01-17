@@ -41,7 +41,10 @@
             required
           ></v-text-field>
 
-          <v-btn to='' color="warning" @click="addUser">OK</v-btn>
+          <v-btn to color="warning" @click="addUser">OK</v-btn>
+          <router-link to="/anmelden">
+            <div class="mt-12 text-center">Hast du schon ein Account?</div>
+          </router-link>
         </v-form>
       </v-col>
     </v-row>
@@ -91,7 +94,7 @@ export default {
   },
   methods: {
     async addUser() {
-      let res = await axios.post("http://127.0.0.1:3000/registrieren", {
+      let res = await axios.post("http://127.0.0.1:5555/registrieren", {
         username: this.username,
         email: this.email1,
         password: this.password1
