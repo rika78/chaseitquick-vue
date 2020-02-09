@@ -5,8 +5,8 @@
       <p>{{hinweise[gefunden]}}</p>
       <p>{{gefunden}} /6</p>
 
-      
       <p>Last Result: {{result}}</p>
+      <p>Timer: {{min}} : {{sec}}</p>
     </div>
 
     <!-- Kamera wird nachgefragt -->
@@ -16,14 +16,16 @@
       <v-btn to="/startseite" class="ml-0">
         <v-icon>mdi-arrow-left</v-icon>
       </v-btn>
+      <!-- Kamera wird geöffnet -->
       <v-btn @click="openCamera" class="mr-12">
         <v-icon>mdi-camera-iris</v-icon>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>
-  
+
 <script>
+/*eslint-disable */
 import { QrcodeStream } from "vue-qrcode-reader";
 import axios from "axios";
 
@@ -48,7 +50,11 @@ export default {
         "Sie haben gewonnen"
       ],
       punkte: 0,
-      time: ""
+      time: {},
+      uid: 0,
+      qrcodes: [],
+      min: 0,
+      sec: 0
     };
   },
   mounted() {
@@ -58,6 +64,7 @@ export default {
       })
       .then(res => {
         (this.username = res.data.user.username),
+          (this.uid = res.data.user.uid),
           (this.email = res.data.user.email);
       });
   },
@@ -66,89 +73,82 @@ export default {
     if (localStorage.getItem("token") == null) {
       this.$router.push("/anmelden");
     }
+    this.getQRCodes();
   },
   methods: {
     openCamera() {
-      // console.log(this.isShowingCamera);
+      // console.log(this.isShowingCamera);
       if (this.isShowingCamera == false) {
         this.isShowingCamera = true;
       } else {
         this.isShowingCamera = false;
       }
     },
+    async getQRCodes() {
+      let res = await axios.get("http://localhost:5555/qrcodes/alle");
+      this.qrcodes = res.data;
+    },
+    async addFound(qr) {
+      let log = await axios.post(
+        `http://localhost:5555/qrcodes/gefunden/${this.uid}`,
+        {
+          uid: this.uid,
+          qid: qr
+        }
+      );
+      console.log(log.data);
+      this.gefunden = log.data.length;
+      //TODO: Wenn es der zweite QRCode ist dann wird die Zeit geholt:
+      if (log.data.length == 2) {
+        this.getTime();
+      }
+    },
 
     async onDecode(result) {
       this.result = result;
+      console.log(this.uid); // Jetziger angemeldeter uid
 
-      let res = await axios.get("http://localhost:5555/qrcodes/alle");
-      let qrcode = res.data; //alle qr codes
-      console.log(res.data);
+      let qr = this.qrcodes.filter(el => el.qrcontent == this.result); //alle qr codes werden mit dem verglichen
 
-      //Array mit dem richtigen objekt
-      let qr = qrcode.filter(el => el.qrcontent == result);
-      console.log(qr[0].qid);
+      //Get History von dem user
+      let his = await axios.get(
+        `http://localhost:5555/qrcodes/found/${this.uid}`
+      );
+      let history = his.data; //Alles was der user schon gefunden hat
 
-      //Get history
-      let his = await axios.post("http://localhost:5555/qrcodes/found", {
-        username: this.username
-      });
-      let history = his.data;
-      this.gefunden = history.length;
-      console.log(history);
-      // console.log(history.filter(el => el.qid == qr[0].qid));
-      // wenn alle qr codes gefunden auf andere seite
       if (this.gefunden == 6) {
+        // Wenn der user schon 6 QRCodes gefunden hat
+        console.log("Neue Seite, sie haben gewonnen");
         this.isShowingCamera = false;
-      }
-      //wenn qr code noch nicht eingescannt
-      else if (history.filter(el => el.qid == qr[0].qid).length == 0) {
-        let log = await axios.post("http://localhost:5555/qrcodes/gefunden", {
-          username: this.username,
-          qid: qr[0].qid
-        });
-        console.log(log);
-        this.gefunden = log.data.length;
-        if (this.gefunden == 2) {
-          this.getTime();
+      } else if (
+        history.filter(el => el.qid == qr[0].qid).length == 0 &&
+        history.filter(el => el.qid == qr[0].qid).length < 6
+      ) {
+        //Wenn QR Code noch nicht im history dann wird er gespeichert und wenn weniger als 6 im history sind
+        if (this.gefunden == 0) {
+          if (qr[0].qid != 1) {
+            console.log("Wrong QR Code");
+          } else {
+            this.addFound(qr[0].qid);
+          }
         }
+        // Nur der nachfolger vom letzten gespeicherten qrcode darf gespeichert werden:
+        else if (this.gefunden > 0) {
+          this.gefunden++;
+          if (qr[0].qid != this.gefunden) {
+            console.log(`${qr[0].qid},${this.gefunden}`);
+            console.log("Wrong QR Code");
+            this.isShowingCamera = false;
+            this.gefunden--;
+          } else {
+            this.addFound(qr[0].qid);
+          }
+        }
+
         this.isShowingCamera = false;
       } else {
-        this.getTime();
         console.log("wurde schon eingescannt");
-
-        this.isShowingCamera = false;
       }
-
-      // //if decoded ist in Datenbank
-
-      // //wenn qid noch nicht im log
-
-      // console.log(log);
-
-      // let history = log.data; // Alle gefundenen
-      // console.log(history);
-
-      // this.gefunden = history.length;
-      // console.log(history.filter(el => el.qid == qr[0].qid)); //?
-
-      // if (!history.filter(el => el.qid == qr[0].qid)) {
-      //   //kamera schließen und zähler hoch
-      //   if (qrcode.filter(el => el.qrcontent == result)) {
-      //     let res = await axios.post("http://localhost:5555/qrcodes/gefunden", {
-      //       username: this.username,
-      //       qid: qr[0].qid
-      //     });
-
-      //     console.log(res);
-      //
-
-      //     console.log(history);
-      //     this.isShowingCamera = false;
-
-      //   }
-      // } else {
-      //   console.log("wurde schon eingescannt");
-      // }
     },
 
     async onInit(promise) {
@@ -171,13 +171,28 @@ export default {
       }
     },
     async getTime() {
-      console.log('hi');
-      let res = await axios.post("http://localhost:5555/qrcodes/found/time", {
-        username: this.username
-      });
+      console.log("hi");
+      let res = await axios.get(
+        `http://localhost:5555/qrcodes/found/time/${this.uid}`
+      );
       // res.data
-      let t1t2 = res.data;
-      console.log(t1t2);
+      let t1t2 = res.data[0];
+      console.log(t1t2.timediff);
+      this.time = t1t2.timediff;
+      this.startCountdown();
+    },
+    startCountdown() {
+      let counter = 0;
+      let minutes = this.time.minutes * 60; // Die Minuten in Sekunden
+      let gesamtdauer = this.time.seconds + minutes; // Gesamter dauer
+
+      setInterval(() => {
+        counter++; //Alle 1sek wird hochgezählt
+        let gesamt = gesamtdauer - counter; //Alle
+
+        this.min = Math.floor(gesamt / 60);
+        this.sec = gesamt % 60;
+      }, 1000);
     }
   }
 };
@@ -190,7 +205,12 @@ Nehmen nur Uhr Zeit, wie?
 
 
 Uhrzeit von QrCode2 - Uhrzeit von QrCode 1 = Zeitabstand in den anderen QrCodes gescanned werden müssen
-
+Aufbau:
+0:
+timediff:
+minutes: 1
+seconds: 9
+milliseconds: 803.233
 
 */
 </script>

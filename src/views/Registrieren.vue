@@ -4,7 +4,7 @@
       <v-img :src="require('../assets/CQ_-Logo.png')" class="my-3" contain height="200"></v-img>
     </v-flex>
 
-    <!-- TODO: Logic hinzufügen -->
+    <!-- FIX ME: Passwort Falsch input -->
     <v-row class="mb-6" justify="center" no-gutters>
       <v-col cols="9">
         <v-form ref="form" v-model="valid" :lazy-validation="lazy">
