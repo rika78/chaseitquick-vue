@@ -7,6 +7,7 @@
 
       <p>Last Result: {{result}}</p>
       <p>Timer: {{min}} : {{sec}}</p>
+      <p>Punkte {{punkte}}</p>
     </div>
 
     <!-- Kamera wird nachgefragt -->
@@ -51,6 +52,7 @@ export default {
       ],
       punkte: 0,
       time: {},
+      timer: null,
       uid: 0,
       qrcodes: [],
       min: 0,
@@ -142,6 +144,7 @@ export default {
             this.gefunden--;
           } else {
             this.addFound(qr[0].qid);
+            this.stopCountdown();
           }
         }
 
@@ -186,13 +189,45 @@ export default {
       let minutes = this.time.minutes * 60; // Die Minuten in Sekunden
       let gesamtdauer = this.time.seconds + minutes; // Gesamter dauer
 
-      setInterval(() => {
+      this.timer = setInterval(() => {
         counter++; //Alle 1sek wird hochgezählt
         let gesamt = gesamtdauer - counter; //Alle
 
         this.min = Math.floor(gesamt / 60);
         this.sec = gesamt % 60;
       }, 1000);
+    },
+    //TODO: Countdown stoppen und
+    stopCountdown(qid) {
+      console.log("stop");
+      clearInterval(this.timer);
+      this.punktesystem();
+      /*TODO: Pop-UP "Nice! Verdiente Punkte: punkte anzahl" -> nachdem okay button wird der Countdown wieder gestartet */
+      this.min = 0;
+      this.sec = 0;
+      this.startCountdown();
+    },
+    //Done: punktsystem
+    punktesystem() {
+      console.log("punkte");
+      let gespunkte = 1000;
+      let gesamtdauer = this.time.seconds + this.time.minutes * 60; // Gesamter dauer
+      let scanndauer = gesamtdauer - (this.sec + this.min * 60); // Dauer nach der gescannten QR Code
+      console.log(`scanndauer:${scanndauer}, gesamtdauer:${gesamtdauer}`);
+      /*Ausrechnen der punktewert*/
+      let punktewert = (gespunkte / gesamtdauer) * 10; // Wv die Punkte wert sind pro 10 sek
+
+      /*Ausrechnen der gesamtpunkte */
+
+      if (scanndauer == 0) {
+        this.punkte = gespunkte;
+      } else if (scanndauer < 0) {
+        // Negative Zahl umwandeln
+        let posdauer = scanndauer * -1;
+        this.punkte = this.punkte + Math.floor((posdauer / 10) * punktewert);
+      } else if (scanndauer > 0) {
+        this.punkte = this.punkte + Math.floor((scanndauer / 10) * punktewert);
+      }
     }
   }
 };
